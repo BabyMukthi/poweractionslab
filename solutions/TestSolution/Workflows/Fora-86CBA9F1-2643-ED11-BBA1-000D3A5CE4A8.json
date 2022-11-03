@@ -1,0 +1,471 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline_1": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedsharepointonline_568d2"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_approvals_1": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedapprovals_19396"
+        },
+        "api": {
+          "name": "shared_approvals"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedoffice365_01c87"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "splitOn": "@triggerBody()['rows']",
+          "metadata": {
+            "operationMetadataId": "92c9d054-1a2a-4bb4-ae7e-0f1de2e44b14"
+          },
+          "type": "Request",
+          "kind": "ApiConnection",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "rows": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "entity": {
+                        "type": "object",
+                        "properties": {
+                          "ID": {
+                            "title": "ID",
+                            "type": "integer",
+                            "format": "int64"
+                          }
+                        },
+                        "required": [
+                          "ID"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "entity"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "rows"
+              ]
+            },
+            "host": {
+              "connection": {
+                "name": "@parameters('$connections')['shared_sharepointonline_1']['connectionId']"
+              }
+            },
+            "operationId": "ForASelectedFileHybridTrigger",
+            "parameters": {
+              "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+              "table": "0188a24f-9d99-4328-a5da-9310d1f2166d"
+            },
+            "headersSchema": {
+              "x-ms-user-timestamp": {
+                "title": "Timestamp",
+                "type": "string",
+                "x-ms-dynamically-added": false
+              }
+            }
+          }
+        }
+      },
+      "actions": {
+        "Get_file_properties": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "68774f1f-47e0-4dfe-89db-9869a371021d"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline_1",
+              "operationId": "GetFileItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+              "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+              "id": "@triggerBody()?['entity']?['ID']"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Convert_time_zone": {
+          "runAfter": {
+            "Get_file_properties": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "345a7a34-bc2b-4a1a-8007-fa9d5f17db73"
+          },
+          "type": "Expression",
+          "kind": "ConvertTimeZone",
+          "inputs": {
+            "baseTime": "@triggerOutputs()['headers']['x-ms-user-timestamp']",
+            "formatString": "g",
+            "sourceTimeZone": "UTC-11",
+            "destinationTimeZone": "Central Standard Time"
+          }
+        },
+        "Update_file_properties": {
+          "runAfter": {
+            "Convert_time_zone": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ca6d23a3-e70a-4eb6-a7cd-0c957b9f78fe"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline_1",
+              "operationId": "PatchFileItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+              "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+              "id": "@outputs('Get_file_properties')?['body/ID']",
+              "item/ManagersApprovalFlowStatus/Value": "Pending procedure owner",
+              "item/ProcedureOwnerApprovalFlowHistory": "Approval request for @{outputs('Get_file_properties')?['body/{Name}']}has been started on @{body('Convert_time_zone')}@{outputs('Get_file_properties')?['body/ProcedureOwnerApprovalFlowHistory']}",
+              "item/MaintenanceManagerApprovalFlowHistory": "@outputs('Get_file_properties')?['body/MaintenanceManagerApprovalFlowHistory']",
+              "item/ReliabilityManagerApprovalFlowHistory": "@outputs('Get_file_properties')?['body/ReliabilityManagerApprovalFlowHistory']"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Initialize_variable": {
+          "runAfter": {
+            "Update_file_properties": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d6d8cc4c-e7ad-4af1-9e18-935225f20751"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "approvalDoneProcOwner",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Initialize_variable_2": {
+          "runAfter": {
+            "Initialize_variable": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "0a896108-0b2e-45fe-a94d-019546ed193c"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "approvalDoneMaintMan",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Initialize_variable_3": {
+          "runAfter": {
+            "Initialize_variable_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "e5445fc8-df88-40fd-bc93-26256cee5525"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "approvalDoneRelMan",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Start_and_wait_for_an_approval_Procedure_Owner": {
+          "runAfter": {
+            "Initialize_variable_3": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "c0b2fcdc-a5d6-4b52-a9a0-91754c7b3cb7"
+          },
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_approvals_1",
+              "operationId": "StartAndWaitForAnApproval",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+            },
+            "parameters": {
+              "approvalType": "Basic",
+              "WebhookApprovalCreationInput/title": "Procedure Owner approval request for @{outputs('Update_file_properties')?['body/{Name}']}",
+              "WebhookApprovalCreationInput/assignedTo": "Baby.Mukthipudi@lyondellbasell.com;",
+              "WebhookApprovalCreationInput/details": "Please review and approve @{body('Update_file_properties')}@{outputs('Update_file_properties')?['body/{Name}']}",
+              "WebhookApprovalCreationInput/itemLink": "@{triggerBody()}l@{outputs('Update_file_properties')?['body/{Link}']}",
+              "WebhookApprovalCreationInput/itemLinkDescription": "@{triggerBody()}@{outputs('Update_file_properties')?['body/{Name}']}",
+              "WebhookApprovalCreationInput/enableNotifications": true,
+              "WebhookApprovalCreationInput/enableReassignment": true
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Condition": {
+          "actions": {
+            "Run_a_Child_Flow": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "ffcd79b3-7203-4b38-b48a-f9309614ff90"
+              },
+              "type": "Workflow",
+              "inputs": {
+                "host": {
+                  "workflowReferenceName": "01fb1c29-2a43-ed11-bba1-000d3a5ce4a8"
+                }
+              }
+            },
+            "Apply_to_each": {
+              "foreach": "@outputs('Start_and_wait_for_an_approval_Procedure_Owner')?['body/responses']",
+              "actions": {
+                "Convert_time_zone_2": {
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "986af19e-6c36-496d-ae12-70bae49a4eb1"
+                  },
+                  "type": "Expression",
+                  "kind": "ConvertTimeZone",
+                  "inputs": {
+                    "baseTime": "@items('Apply_to_each')?['responseDate']",
+                    "formatString": "g",
+                    "sourceTimeZone": "UTC-11",
+                    "destinationTimeZone": "Central Standard Time"
+                  }
+                },
+                "Update_file_properties_3": {
+                  "runAfter": {
+                    "Convert_time_zone_2": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "c34242e2-961a-44f6-9047-ef7ac07a0e34"
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline_1",
+                      "operationId": "PatchFileItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+                      "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+                      "id": "@outputs('Update_file_properties')?['body/ID']",
+                      "item/ManagersApprovalFlowStatus/Value": "Pending Maintenance Manager",
+                      "item/ProcedureOwnerApprovalFlowHistory": " Approved by Procedure Owner \n\n",
+                      "item/MaintenanceManagerApprovalFlowHistory": "Maintenance Manager Approval request for  has been started on \n\n"
+                    },
+                    "authentication": {
+                      "type": "Raw",
+                      "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Run_a_Child_Flow": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "f4d92112-8128-45c6-9131-fb05294a305f"
+              },
+              "type": "Foreach"
+            },
+            "Set_variable": {
+              "runAfter": {
+                "Apply_to_each": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "1021cfa0-17cd-4a44-bcca-9350e4802dbf"
+              },
+              "type": "SetVariable",
+              "inputs": {
+                "name": "approvalDoneProcOwner",
+                "value": 1
+              }
+            }
+          },
+          "runAfter": {
+            "Start_and_wait_for_an_approval_Procedure_Owner": [
+              "Succeeded"
+            ]
+          },
+          "expression": {
+            "contains": [
+              "@outputs('Start_and_wait_for_an_approval_Procedure_Owner')?['body/outcome']",
+              "Approve"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "6ba9a73f-5ef5-4bd4-915f-9be2938736cd"
+          },
+          "type": "If"
+        },
+        "Delay_Procedure_owner_reminders": {
+          "runAfter": {
+            "Initialize_variable_3": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "62e691d0-2227-49b2-81c7-107c0853665b"
+          },
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 7,
+              "unit": "Day"
+            }
+          }
+        },
+        "Update_file_properties_2": {
+          "runAfter": {
+            "Start_and_wait_for_an_approval_Procedure_Owner": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ee71521a-617c-4c0b-aced-e4321ea8e901"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline_1",
+              "operationId": "PatchFileItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+              "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+              "id": "@triggerBody()?['entity']?['ID']",
+              "item/ManagersApprovalFlowStatus/Value": "Timed Out",
+              "item/ProcedureOwnerApprovalFlowHistory": "⏳ Approval Request from Procedure Owner has timed out. \nApproval@{outputs('Update_file_properties')?['body/ProcedureOwnerApprovalFlowHistory']}"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Send_an_email_(V2)": {
+          "runAfter": {
+            "Update_file_properties_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "5b3c8480-a084-45cd-897a-4db26018c541"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+            },
+            "parameters": {
+              "emailMessage/To": "Baby.Mukthipudi@lyondellbasell.com",
+              "emailMessage/Subject": "Procedure Owner approval request has timed out.",
+              "emailMessage/Body": "<p>The approval request for @{outputs('Get_file_properties')?['body/{Name}']} has timed out.<br>\n<br>\n@{outputs('Get_file_properties')?['body/{Link}']}\"&gt;@{outputs('Get_file_properties')?['body/{Name}']}</p>",
+              "emailMessage/Importance": "Normal"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Terminate": {
+          "runAfter": {
+            "Send_an_email_(V2)": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8077f10e-753a-4b5b-a6fd-b77df93e110c"
+          },
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Failed",
+            "runError": {
+              "message": "Procedure Owner Timed Out"
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,368 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedsharepointonline_568d2"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedoffice365_01c87"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "8ff61209-abe3-4a79-8abe-77d869deb971"
+          },
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            },
+            "headersSchema": {
+              "x-ms-user-name-encoded": {
+                "title": "User name",
+                "type": "string",
+                "format": "byte",
+                "x-ms-dynamically-added": false
+              }
+            }
+          }
+        }
+      },
+      "actions": {
+        "Run_a_Child_Flow": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "5e6912df-c661-4e62-bc8b-3240e3b08ab9"
+          },
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "993fd24e-a14f-ed11-bba1-000d3a3114a1"
+            }
+          }
+        },
+        "Update_file_properties": {
+          "runAfter": {
+            "Run_a_Child_Flow": [
+              "Failed",
+              "Skipped"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "35a12875-f61f-4bee-a394-247f7e5ad73e"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchFileItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+              "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+              "id": "@triggerOutputs()['headers']['x-ms-user-name-encoded']",
+              "item/ManagersApprovalFlowStatus/Value": "Timed Out",
+              "item/ProcedureOwnerApprovalFlowHistory": " Approval Request from Maintenance Manager has timed out.  \n"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Send_an_email_(V2)": {
+          "runAfter": {
+            "Update_file_properties": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "b2f248df-5e3c-4a75-9d2b-f98e43bf73f4"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+            },
+            "parameters": {
+              "emailMessage/To": "baby.mukthipudi@lyondellbasell.com",
+              "emailMessage/Subject": "Procedure owner timed out",
+              "emailMessage/Body": "<p>time out</p>",
+              "emailMessage/Importance": "Normal"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Terminate": {
+          "runAfter": {
+            "Send_an_email_(V2)": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ec94956b-0316-4043-a3c8-14093b2abc28"
+          },
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Failed",
+            "runError": {
+              "message": "Approval Request from Procedure owner has timed out.  \n"
+            }
+          }
+        },
+        "Update_file_properties_2": {
+          "runAfter": {
+            "Apply_to_each": [
+              "Failed",
+              "Skipped"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "84f0174e-8268-42a7-8dc2-dc9627882028"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchFileItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+              "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+              "id": "@triggerOutputs()['headers']['x-ms-user-name-encoded']",
+              "item/ManagersApprovalFlowStatus/Value": "Timed Out",
+              "item/MaintenanceManagerApprovalFlowHistory": "time out"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Send_an_email_(V2)_2": {
+          "runAfter": {
+            "Update_file_properties_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "046f4c09-d8f9-4190-8b48-345cc60bff0c"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+            },
+            "parameters": {
+              "emailMessage/To": "Baby.Mukthipudi@lyondellbasell.com",
+              "emailMessage/Subject": "mm time out",
+              "emailMessage/Body": "<p>time out</p>",
+              "emailMessage/Importance": "Normal"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        },
+        "Terminate_2": {
+          "runAfter": {
+            "Send_an_email_(V2)_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "15051e96-32b2-4f00-b7c2-e742a1c4388b"
+          },
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Failed",
+            "runError": {
+              "message": "Failed"
+            }
+          }
+        },
+        "Apply_to_each": {
+          "foreach": "@body('Run_a_Child_Flow')?['output']",
+          "actions": {
+            "Update_file_properties_3": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "b39de047-c1ee-44a3-a669-ae75e26d2aa5"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchFileItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+                  "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+                  "id": "@items('Apply_to_each')",
+                  "item/ManagersApprovalFlowStatus/Value": "Approved",
+                  "item/ProcedureOwnerApprovalFlowHistory": "Approved"
+                },
+                "authentication": {
+                  "type": "Raw",
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                }
+              }
+            },
+            "Run_a_Child_Flow_4": {
+              "runAfter": {
+                "Update_file_properties_3": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "57de5f1c-492c-4a81-8015-798032f15d13"
+              },
+              "type": "Workflow",
+              "inputs": {
+                "host": {
+                  "workflowReferenceName": "c6f6450e-a24f-ed11-bba1-000d3a311ea6"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Run_a_Child_Flow": [
+              "Succeeded",
+              "TimedOut"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "9a34acd5-1bbf-425f-b6d8-22f9c1973663"
+          },
+          "type": "Foreach"
+        },
+        "Apply_to_each_2": {
+          "foreach": "@body('Run_a_Child_Flow')?['output']",
+          "actions": {
+            "Update_file_properties_4": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "23556ced-177e-4d2e-9665-8d1c2bf221bc"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchFileItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+                  "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+                  "id": "@triggerOutputs()['headers']['x-ms-user-name-encoded']",
+                  "item/MaintenanceManagerApprovalFlowHistory": "Approved"
+                },
+                "authentication": {
+                  "type": "Raw",
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                }
+              }
+            },
+            "Run_a_Child_Flow_2": {
+              "runAfter": {
+                "Update_file_properties_4": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "78ba00d3-780d-4123-a4a4-757fa3d1e45f"
+              },
+              "type": "Workflow",
+              "inputs": {
+                "host": {
+                  "workflowReferenceName": "01fb1c29-2a43-ed11-bba1-000d3a5ce4a8"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Apply_to_each": [
+              "Succeeded",
+              "TimedOut"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ca5a28a5-4693-4531-b324-7cf4fd942bf7"
+          },
+          "type": "Foreach"
+        },
+        "Update_file_properties_5": {
+          "runAfter": {
+            "Apply_to_each_2": [
+              "TimedOut",
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "9c716a2f-afa4-421b-b178-7d14ebe18ddc"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchFileItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "https://lyondellbasell.sharepoint.com/sites/TestSiteSharepoint",
+              "table": "0188a24f-9d99-4328-a5da-9310d1f2166d",
+              "id": "@triggerOutputs()['headers']['x-ms-user-name-encoded']",
+              "item/ReliabilityManagerApprovalFlowHistory": "Approved"
+            },
+            "authentication": {
+              "type": "Raw",
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

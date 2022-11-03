@@ -1,0 +1,81 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "c597c93a-4e0a-4475-86a9-1db14846820d"
+          },
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "actions": {
+        "Run_a_Child_Flow": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "38c91f05-d5c1-4627-9c40-e7408d9b2a24"
+          },
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "993fd24e-a14f-ed11-bba1-000d3a3114a1"
+            }
+          }
+        },
+        "Run_a_Child_Flow_2": {
+          "runAfter": {
+            "Run_a_Child_Flow": [
+              "Succeeded",
+              "TimedOut"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "048d899f-9fc8-453d-9c90-3539706a71e0"
+          },
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "c6f6450e-a24f-ed11-bba1-000d3a311ea6"
+            }
+          }
+        },
+        "Run_a_Child_Flow_3": {
+          "runAfter": {
+            "Run_a_Child_Flow_2": [
+              "Succeeded",
+              "TimedOut"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "1c6af14b-946c-412a-aed1-c1c66c9d8d99"
+          },
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "01fb1c29-2a43-ed11-bba1-000d3a5ce4a8"
+            }
+          }
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}
