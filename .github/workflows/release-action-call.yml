@@ -7,7 +7,7 @@ on:
       types: [created]        
 
 jobs:
-  Release-solution-ALMLab:
+  Release-solution-TestSolution:
     uses: ./.github/workflows/release-solution-with-inputs.yml
     with:
       #You can specify the solution name here
