@@ -1,0 +1,21 @@
+name: Release action
+# Call the reusable workflow release-solution-with-inputs.yml
+# Release your solution to prod when you create a new release.
+
+on:
+  release:
+      types: [created]        
+
+jobs:
+  Release-solution-ALMLab:
+    uses: ./.github/workflows/release-solution-with-inputs.yml
+    with:
+      #You can specify the solution name here
+      solution_name: TestSolution
+      #Update your values here
+      BUILD_ENVIRONMENT_URL: 'https://lybdev.crm.dynamics.com'
+      PRODUCTION_ENVIRONMENT_URL: 'https://orgd50958cc.crm.dynamics.com/'
+      CLIENT_ID: 'ae0958f0-b5cb-4a62-8d83-50718b4c6747'
+      TENANT_ID: 'fbe62081-06d8-481d-baa0-34149cfefa5f'      
+    secrets:
+      envSecret: ${{ secrets.PowerPlatformSPN }}
