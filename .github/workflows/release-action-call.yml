@@ -14,7 +14,7 @@ jobs:
       solution_name: TestSolution
       #Update your values here
       BUILD_ENVIRONMENT_URL: 'https://lybdev.crm.dynamics.com'
-      PRODUCTION_ENVIRONMENT_URL: 'https://orga9819a8a.crm.dynamics.com/'
+      PRODUCTION_ENVIRONMENT_URL: 'https://orga9819a8a.crm.dynamics.com'
       CLIENT_ID: 'ae0958f0-b5cb-4a62-8d83-50718b4c6747'
       TENANT_ID: 'fbe62081-06d8-481d-baa0-34149cfefa5f'      
     secrets:
