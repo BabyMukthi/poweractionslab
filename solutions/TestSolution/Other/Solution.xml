@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.22101.174" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ImportExportXml version="9.2.22104.224" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <SolutionManifest>
     <UniqueName>TestSolution</UniqueName>
     <LocalizedNames>
@@ -81,12 +81,6 @@
     </Publisher>
     <RootComponents>
       <RootComponent type="1" schemaName="new_testgit" behavior="0" />
-      <RootComponent type="29" id="{01fb1c29-2a43-ed11-bba1-000d3a5ce4a8}" behavior="0" />
-      <RootComponent type="29" id="{6d565cba-a34f-ed11-bba1-000d3a3114a1}" behavior="0" />
-      <RootComponent type="29" id="{86cba9f1-2643-ed11-bba1-000d3a5ce4a8}" behavior="0" />
-      <RootComponent type="29" id="{993fd24e-a14f-ed11-bba1-000d3a3114a1}" behavior="0" />
-      <RootComponent type="29" id="{c6f6450e-a24f-ed11-bba1-000d3a311ea6}" behavior="0" />
-      <RootComponent type="29" id="{db6cc1f2-f854-ed11-bba2-6045bd0069e2}" behavior="0" />
       <RootComponent type="62" schemaName="new_TestGit" behavior="0" />
       <RootComponent type="80" schemaName="new_TestGit" behavior="0" />
     </RootComponents>
@@ -94,18 +88,6 @@
       <MissingDependency>
         <Required type="61" schemaName="msdyn_/Images/AppModule_Default_Icon.png" displayName="msdyn_/Images/AppModule_Default_Icon.png" solution="AppModuleWebResources (2.5)" />
         <Dependent type="80" schemaName="new_TestGit" displayName="Test Git" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="connectionreference" displayName="new_sharedapprovals_19396" solution="Active" id.connectionreferencelogicalname="new_sharedapprovals_19396" />
-        <Dependent type="29" displayName="For a" id="{86cba9f1-2643-ed11-bba1-000d3a5ce4a8}" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="connectionreference" displayName="new_sharedsharepointonline_568d2" solution="Active" id.connectionreferencelogicalname="new_sharedsharepointonline_568d2" />
-        <Dependent type="29" displayName="Parent Flow" id="{6d565cba-a34f-ed11-bba1-000d3a3114a1}" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="connectionreference" displayName="new_sharedsharepointonline_568d2" solution="Active" id.connectionreferencelogicalname="new_sharedsharepointonline_568d2" />
-        <Dependent type="29" displayName="For a" id="{86cba9f1-2643-ed11-bba1-000d3a5ce4a8}" />
       </MissingDependency>
     </MissingDependencies>
   </SolutionManifest>
